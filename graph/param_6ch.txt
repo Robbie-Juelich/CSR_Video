@@ -1,0 +1,16 @@
+CH              6
+X0				0
+Y0				960
+W				1920
+H				120
+
+LOGO			logo/logo.jpg
+LOGO_X			100
+LOGO_Y			800
+LOGO_W			240
+LOGO_H			70
+
+
+DIGIT_X   		1000
+DIGIT_Y   		30
+

@@ -1,0 +1,13 @@
+X0				1280
+Y0				720
+W				640
+H				360
+
+LOGO			logo/logo.jpg
+LOGO_W          360
+LOGO_H          100
+
+
+DIGIT_X         20
+DIGIT_Y         180
+

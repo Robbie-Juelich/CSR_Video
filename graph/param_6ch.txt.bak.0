@@ -1,0 +1,15 @@
+X0				0
+Y0				960
+W				1920
+H				120
+
+LOGO			logo/csr.bmp
+LOGO_X			100
+LOGO_Y			800
+LOGO_W			200
+LOGO_H			80
+
+
+DIGIT_X   		1250
+DIGIT_Y   		30
+

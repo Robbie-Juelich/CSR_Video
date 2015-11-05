@@ -1,0 +1,16 @@
+CH              4
+X0				1440
+Y0				0
+W				480
+H				1080
+
+LOGO			logo/logo.jpg
+LOGO_X			100
+LOGO_Y			800
+LOGO_W			240
+LOGO_H			70
+
+
+DIGIT_X   		10
+DIGIT_Y   		850
+

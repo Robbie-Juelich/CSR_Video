@@ -1,0 +1,7 @@
+To generate logo for videosystem
+./res is the default picture
+
+sudo apt-get install libsvg-perl # install perl svg support
+perl csr_logo.pl		# to generate all images
+perl csr_logo.pl clean  # to clean all images
+

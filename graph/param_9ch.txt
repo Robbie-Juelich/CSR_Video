@@ -1,0 +1,14 @@
+CH              9
+X0				1280
+Y0				720
+W				640
+H				360
+
+LOGO			logo/logo.jpg
+LOGO_W          240
+LOGO_H          70
+
+
+DIGIT_X         50
+DIGIT_Y         150
+
