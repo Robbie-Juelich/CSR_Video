@@ -1,0 +1,29 @@
+Some utils for debug
+
+Make:
+	run "make" to build all these tools
+	run "make clean" to clean
+
+
+tw2828reg-rw.c:
+	For reading & writting tw2828 and fpga register
+	"./tw2828reg-rw 0x1000 r"
+	"./tw2828reg-rw 0x1002 w 0x1" to select Rec3 output
+
+i2c-rw.c:
+	For reading and writting i2c registers
+	"./i2c-rw /dev/i2c-1  0x28 0xff r" to read chip id for 2968(0xf0)
+	"./i2c-rw /dev/i2c-1  0x28 0xfe w 0x23"
+		
+mxc_v4l2_capture.c:
+	For capturing v4l2 video data
+	Edit config.h and the make
+	"./mxc_v4l2_capture -c 50 all.yuv" to capture 50 frames and store to all.yuv
+
+display_yuv.c:
+	A simple program to display yuv422 and yuv420 image
+	Edit config.h and then make
+	If you need to output one frame per file, edit "#define OUTPUT_PERFRAME 1" in display_yuv.c.
+	"./display_yuv all.yuv" to display the captured yuv image
+
+
