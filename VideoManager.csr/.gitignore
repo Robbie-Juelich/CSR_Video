@@ -1,0 +1,7 @@
+/log
+VideoManager
+*pro.user*
+*.vcxproj.*
+*.suo
+/tags
+/build
