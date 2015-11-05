@@ -1,0 +1,13 @@
+.*
+*.o
+*.ko
+*.so
+*.mod.c
+*.patch
+*.bak
+
+tags
+TAGS
+
+!.gitignore
+
