@@ -1,0 +1,11 @@
+if VIDEO_MXC_CAMERA
+
+config MXC_TVIN_MUX_TW2828_TW2968
+	tristate "Intersil TW2828/TW2968 video mux support"
+	depends on MACH_MX6Q_SABRELITE  && VIDEO_MXC_CAMERA && MXC_TVIN_MUX_TW2828
+	default y 
+	---help---
+	  If you plan to use the TW2828 TW2968 video mux with your MXC system, say Y here.
+	  Huilian project for CSR
+
+endif
