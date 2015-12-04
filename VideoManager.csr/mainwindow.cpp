@@ -338,7 +338,7 @@ void MainWindow::on_pushButton_multi_ch_clicked()
 
     videoPlayer->toChangeMode(0x1);
     msg_t msg;
-    sendMsg.wrapCamMsg(cur_dev_id, 1, 0);
+    msg = sendMsg.wrapCamMsg(cur_dev_id, 1, 0);
     sendMsg.send(msg);
 }
 
