@@ -21,7 +21,7 @@ public:
 
 private slots:
 
-    void on_pushButton_ip_clicked();
+    void on_pushButton_start_clicked();
 
 public slots:
     void readServerMessage();
@@ -32,10 +32,12 @@ private:
     Ui::MainWindow *ui;
 
     QUdpSocket *udpSocket;
+
     QMutex mutex;
     //QUdpSocket *udpVideoSocket;
 
-    void initClient();
+    bool initClient();
+    void uninitClient();
 
     msg_t msg;
     QByteArray data_block;
@@ -50,6 +52,8 @@ private:
 
     quint16 videoPort;
     QHostAddress videoIP;
+
+    bool m_started;
 };
 
 

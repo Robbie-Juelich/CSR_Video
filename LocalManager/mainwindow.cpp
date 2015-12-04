@@ -3,63 +3,77 @@
 #include<QDebug>
 #include<QMessageBox>
 
-
 //#define SERVER_ADDRESS	"223.255.18.169"
-#define SERVER_ADDRESS	"10.10.10.100"
-#define VIDEO_ADDRESS 	"10.10.10.50"
+//#define SERVER_ADDRESS	"192.168.0.86"
+//#define VIDEO_ADDRESS 	"192.168.0.10"
 
 QMutex mutex;
+
+QString SERVER_ADDRESS;  // address of the manager
+QString VIDEO_ADDRESS;    // address of the ip camra
 
 void MainWindow::readServerMessage()
 {
     QHostAddress sender_ip;
     quint16 sender_port;
-    quint32 bytes = udpSocket->pendingDatagramSize();
-     char msg[1024];
-    if(bytes >0){
-
-        udpSocket->readDatagram(msg, bytes, &sender_ip, &sender_port);
-        //udpSocket->readDatagram((char*)msg.data, 5, &sender_ip, &sender_port);
+    while(udpSocket->hasPendingDatagrams()) {
+        qint32 bytes = udpSocket->pendingDatagramSize();
+        QByteArray datagram;
+        datagram.resize(bytes);
+        char *msg = datagram.data();
+        qint32 num = udpSocket->readDatagram(msg, bytes, &sender_ip, &sender_port);
         //qDebug() <<"Got msg data type " <<  (int)(msg.data[1]);
-        //qDebug() << "From ip:" << sender_ip.toString() << " port:" << (u_int32_t)sender_port;
-        //udpSocket->readDatagram((char*)(&(msg.data[2])), sizeof(msg_length(msg) -2),
-          //                              &sender_ip,  &sender_port);
-        QByteArray array((char*)msg, bytes);
-        for(int i = 0; i < bytes; ++i){
-        //    qDebug() << (unsigned char)array[i];
+        qDebug() << "From ip:" << sender_ip.toString() << " port:" << (u_int32_t)sender_port;
+        for(int i = 0; i < (int)num; ++i){
+            qDebug() << (unsigned char)datagram[i];
         }
-         udpSocket->writeDatagram(array, videoIP, videoPort);
-        //QByteArray array((char*)msg.data, msg_length(msg));
-      /*  {
-            for(int i = 0; i < msg_length(msg); ++i){
-                qDebug() << (unsigned char)array[i];
-            }
-            QMutexLocker locker(&mutex);
-
-            qDebug() << "write msg to media";
-            udpSocket->writeDatagram(array, videoIP, videoPort);
+        QMutexLocker locker(&mutex);  // do not need
+        //int ret = udpSocket->writeDatagram(array, QHostAddress::Broadcast, videoPort);
+        int ret = udpSocket->writeDatagram(datagram, videoIP, videoPort);
+        if (ret < 0) {
+            qDebug() << "send msg error";
         }
-        */
+        //udpSocket->flush();
     }
 }
 
-void MainWindow::initClient()
+void MainWindow::uninitClient()
+{
+    timer.stop();
+    udpSocket->close();
+    disconnect(udpSocket, SIGNAL(readyRead()), this, SLOT(readServerMessage()));
+}
+
+bool MainWindow::initClient()
 {
     bool connected;
+
+    videoPort = 11000;
+    videoIP = QHostAddress(VIDEO_ADDRESS);
     serverPort = 11001;
     serverIP = QHostAddress(SERVER_ADDRESS);
 
-    udpSocket = new QUdpSocket(this);
+    if (videoIP.isNull() || serverIP.isNull()) {
+        QMessageBox::warning(this, QString::fromLocal8Bit("IP地址输入错误"),
+                             QString::fromLocal8Bit("IP地址输入错误"));
+        return false;
+    }
+
     connected = udpSocket->bind(11003,
                                         QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
     if(connected) {
         qDebug() << "udpServerSocket  bind";
+        qDebug() << "IPCam addr: " << videoIP;
+        qDebug() << "ManagerServer addr: " << serverIP;
+    } else {
+        QMessageBox::warning(this, QString::fromLocal8Bit("UDP绑定错误"),
+                             QString::fromLocal8Bit("UDP绑定错误"));
+        return false;
     }
 
     connect(udpSocket, SIGNAL(readyRead()), this, SLOT(readServerMessage()));
-
-    videoPort = 11000;
-    videoIP = QHostAddress(VIDEO_ADDRESS);
+    timer.start(2000);
+    return true;
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -70,9 +84,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->label->setScaledContents(true);
 
-    initClient();
+    udpSocket = new QUdpSocket(this);
+
+//    initClient();
     connect(&timer, SIGNAL(timeout()), this, SLOT(on_test()));  // 用于测试
-    timer.start(2000);
+    m_started = false;
+    ui->pushButton_start->setText(QString::fromLocal8Bit("启动"));
 }
 
 void MainWindow::on_test()
@@ -94,7 +111,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_ip_clicked()
+void MainWindow::on_pushButton_start_clicked()
 {
-
+    if (!m_started) {
+        SERVER_ADDRESS = ui->lineEdit->text();
+        VIDEO_ADDRESS = ui->lineEdit_2->text();
+        if (!initClient()) {
+            return;
+        }
+        ui->pushButton_start->setText(QString::fromLocal8Bit("关闭"));
+        ui->lineEdit->setEnabled(false);
+        ui->lineEdit_2->setEnabled(false);
+        m_started = true;
+    } else {
+        uninitClient();
+        ui->pushButton_start->setText(QString::fromLocal8Bit("启动"));
+        ui->lineEdit->setEnabled(true);
+        ui->lineEdit_2->setEnabled(true);
+        m_started = false;
+    }
 }
