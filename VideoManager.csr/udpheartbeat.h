@@ -1,4 +1,4 @@
-﻿#ifndef UDPHEARTBEAT_H
+#ifndef UDPHEARTBEAT_H
 #define UDPHEARTBEAT_H
 
 #include<QtNetwork>
@@ -65,11 +65,15 @@ protected:
     QHostAddress audioOutRtcpIp;
     quint16  audioOutRtcpPort;
 
+    QHostAddress heartbeatOutIp;
+    quint16  heartbeatOutPort;
 
     static QSharedPointer<UdpHeartBeat> _instance;
 //    static UdpHeartBeat* _instance;
     QTimer *checkTimer;
     QDateTime  last;
+
+    QTimer *heartbeatTimer;
 
 Q_SIGNALS:
     void heartBeatMsgArrived();
@@ -78,6 +82,7 @@ Q_SIGNALS:
 private slots:
     void readHeartBeatMessage();
     void check();
+    void heartbeatCheck();
     //void errorRemoteConnection();
 };
 

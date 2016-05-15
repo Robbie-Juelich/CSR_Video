@@ -1,4 +1,4 @@
-﻿/*
+/*
     Copyright (C) 2010 Marco Ballesio <gibrovacco@gmail.com>
     Copyright (C) 2011 Collabora Ltd.
       @author George Kiagiadakis <george.kiagiadakis@collabora.co.uk>
@@ -125,6 +125,7 @@ void VideoPlayer::setIP(QHostAddress ip, quint16 port)
 
 void VideoPlayer::updateCaps(QString vcaps)
 {
+    Q_ASSERT(vcaps.contains("video"));
     QMutexLocker locker(&mutex);
     QGst::State s = state();
 

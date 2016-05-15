@@ -1,4 +1,4 @@
-﻿#include "udpheartbeat.h"
+#include "udpheartbeat.h"
 #include<QSharedMemory>
 #include"QsLog.h"
 #include "msg.h"
@@ -39,14 +39,38 @@ UdpHeartBeat::UdpHeartBeat()
     last = QDateTime::currentDateTime();
 
     connect(checkTimer, SIGNAL(timeout()), this, SLOT(check()));
+
+    heartbeatTimer = new QTimer(this);
+    heartbeatTimer->setInterval(1000);
+    connect(heartbeatTimer, SIGNAL(timeout()), this, SLOT(heartbeatCheck()));
 }
 
 void UdpHeartBeat::check()
 {
     if (last.secsTo(QDateTime::currentDateTime()) >= 3) {
         checkTimer->stop();
+        heartbeatTimer->stop();
         emit dead();
     }
+}
+
+void UdpHeartBeat::heartbeatCheck()
+{
+    mx6ip_msg_t mx6ip_msg;
+    unsigned char *data = (unsigned char*)&mx6ip_msg;
+    mx6ip_msg.header.fstart = 0x5;
+    mx6ip_msg.header.ftype =  0xAC;
+    mx6ip_msg.type = 0x0; // ?? not used now ??
+    mx6ip_msg.sum = 0;
+    mx6ip_msg.fend = 0x17;
+    int len = sizeof(mx6ip_msg);
+    for(int i = 1; i < len - 2; ++i) {
+        data[len -2] += data[i];
+    }
+    heartBeatQ3UdpSocket->writeBlock((char*)data, sizeof(mx6ip_msg), // or just use write ??
+                                     heartbeatOutIp, heartbeatOutPort);
+    qDebug() << "Send hearbeat msg to ip: " << heartbeatOutIp
+                << " port: "<< heartbeatOutPort;
 }
 
 void UdpHeartBeat::readHeartBeatMessage()
@@ -58,6 +82,7 @@ void UdpHeartBeat::readHeartBeatMessage()
 #ifdef HEART_BEAT_USE_Q3
     int byteCount = heartBeatQ3UdpSocket->bytesAvailable();
     while(byteCount > 0){
+        // or use readBlock ??
          qint32 readCount = heartBeatQ3UdpSocket->read((char*)msg.data, sizeof(msg.mx6ip_msg));
          if(readCount < 0) {
              QLOG_DEBUG() << "error read hearbeat info " <<  byteCount << "to read";
@@ -94,6 +119,10 @@ void UdpHeartBeat::readHeartBeatMessage()
          case 0xB3:
             audioOutRtcpIp = sender_ip;
             audioOutRtcpPort = sender_port;
+            break;
+        case 0xB4:  // new add
+            heartbeatOutIp = sender_ip;
+            heartbeatOutPort = sender_port;
             break;
          default:
              QLOG_DEBUG() << "new q3  Error UDP data";

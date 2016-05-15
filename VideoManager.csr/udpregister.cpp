@@ -1,4 +1,4 @@
-﻿#include "udpregister.h"
+#include "udpregister.h"
 #include<QSharedMemory>
 #include"QsLog.h"
 #include "msg.h"
@@ -30,6 +30,8 @@ void UdpRegister::no_shangweiji_test()
     emit(regMsgArrived());
 }
 
+#define REPEAT_COUNT 5
+
 qint32 UdpRegister::writeData(QByteArray& array)
 {
     if(regMachineIP.isNull()){
@@ -43,8 +45,10 @@ qint32 UdpRegister::writeData(QByteArray& array)
         for(int i = 0; i < array.length(); ++i){
             qDebug() << (unsigned char)array[i];
         }*/
-        bytes = regUdpSocket->writeDatagram(array, regMachineIP, regMachinePort);
-        QLOG_DEBUG() << "regUdpSocket write " << bytes << " bytes";
+        for (int i = 0;  i < REPEAT_COUNT; ++i) { // to ensure message is sent
+            bytes = regUdpSocket->writeDatagram(array, regMachineIP, regMachinePort);
+            QLOG_DEBUG() << "regUdpSocket write " << bytes << " bytes, repeat " << i << "times";
+        }
     }
     return bytes;
 }

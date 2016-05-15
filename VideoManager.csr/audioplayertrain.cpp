@@ -165,6 +165,7 @@ void AudioPlayerTrain::setIP(QHostAddress ip,quint16 port)
 
 void AudioPlayerTrain::updateCaps(QString acaps)
 {
+    Q_ASSERT(acaps.contains("audio"));
     QMutexLocker locker(&mutex);
     QGst::State s = state();
 

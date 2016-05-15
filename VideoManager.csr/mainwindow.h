@@ -35,7 +35,7 @@ public:
 private slots:
     void responseRegMsg();
 
-    void responseCapsMsg();
+    void responseCapsMsg(int type, QString caps);
 
     void responseVideoHeartBeatMsg();
 

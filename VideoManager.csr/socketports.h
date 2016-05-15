@@ -8,6 +8,8 @@
 #define VIDEO_OUT_PORT  50004  // port for sending video rtcp
 #define PORT_BASE 5004     // port for audio and video
 
-#define CAPS_PORT 50002
+//#define CAPS_PORT 50002
+#define VCAPS_PORT 51002
+#define ACAPS_PORT 51003
 
 #endif // SOCKETPORTS_H

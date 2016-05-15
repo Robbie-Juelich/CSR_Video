@@ -143,15 +143,18 @@ typedef struct{
     char fend;
 }ip_msg_t;
 
+typedef struct caps_msg {
+    char type; /*0: video; 1: audio*/
+    int len;   /* actual length of caps string in caps_str[] */
+        char caps_str[400];
+}  __attribute__((packed)) caps_msg_t;
+
 typedef struct {
-                msg_header_t header; //type:0xC0
-                char dev_id;
-                int vcaps_len;
-                char vcaps[400];
-                int acaps_len;
-                char acaps[400];
-                char fend;
-} avcaps_msg_t;// __attribute__((packed)) avcaps_msg_t;
+        msg_header_t header; //type:0xC0
+        char dev_id;
+    caps_msg_t caps;
+        char fend;
+} __attribute__((packed)) avcaps_msg_t;
 
 #define MD5_LEN 16
 #define LOAD_SIZE  1024 * 4 // 4K

@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "msg.h"
 #include<QMessageBox>
@@ -63,8 +63,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(responseRegMsg()));
     connect(udpHeartBeatSocket.data(), SIGNAL(heartBeatMsgArrived()),
             this, SLOT(responseVideoHeartBeatMsg()));
-    connect(switchCapsSocket.data(), SIGNAL(capsArrived()),
-            this, SLOT(responseCapsMsg()));
+    connect(switchCapsSocket.data(), SIGNAL(capsArrived(int, QString)),
+            this, SLOT(responseCapsMsg(int, QString)));
     connect(udpHeartBeatSocket.data(), SIGNAL(dead()), this, SLOT(heartBeatDead()));
 
     outsocket = OutSocket::Instance();
@@ -163,19 +163,20 @@ void MainWindow::responseRegMsg()
     ui->groupBox_host->setEnabled(true);
 }
 
-void MainWindow::responseCapsMsg()
+void MainWindow::responseCapsMsg(int type, QString caps)
 {
-    QString a_caps = switchCapsSocket->getACaps();
-    QString v_caps = switchCapsSocket->getVCaps();
-
-    if(v_caps.length() > 0) {
-        videoPlayer->updateCaps(v_caps);
+//    QString a_caps = switchCapsSocket->getACaps();
+//    QString v_caps = switchCapsSocket->getVCaps();
+    if (caps.length() <= 0) {
+        return;
     }
-    if(a_caps.length() > 0){
-        audioPlayerTrain->updateCaps(a_caps);
+    if (type == 0) {
+        videoPlayer->updateCaps(caps);
+        QLOG_DEBUG() << "in responseCapsMsg VCaps: " << caps;
+    } else {
+        audioPlayerTrain->updateCaps(caps);
+        QLOG_DEBUG() << "in responseCapsMsg ACaps: " << caps;
     }
-    QLOG_DEBUG() << "in responseCapsMsg ACaps: " << a_caps;
-    QLOG_DEBUG() << "in responseCapsMsg VCaps: " << v_caps;
 }
 
 void MainWindow::onStateChanged()

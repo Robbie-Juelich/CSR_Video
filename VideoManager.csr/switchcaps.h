@@ -10,27 +10,28 @@ class SwitchCaps : public QObject
 public:
     static QSharedPointer<SwitchCaps> Instance() ;
     //static SwitchCaps* Instance();
-    QString getACaps() { return a_caps;  }
-    QString getVCaps() { return v_caps;  }
+    //QString getACaps() { return a_caps;  }
+    //QString getVCaps() { return v_caps;  }
     ~SwitchCaps();
 protected:
     SwitchCaps();
 
-    QTcpServer caps_server;
-    QTcpSocket *caps_socket;
+    //QTcpServer caps_server;
+    //QTcpSocket *caps_socket;
+    QUdpSocket *acaps_socket;
+    QUdpSocket *vcaps_socket;
 
     static QSharedPointer<SwitchCaps> _instance;
     //static SwitchCaps *_instance;
-    QString a_caps;
-    QString v_caps;
+    QString m_acaps;
+    QString m_vcaps;
 
 Q_SIGNALS:
-    void capsArrived();
+    void capsArrived(int type, QString caps);
 
 private slots:
-    void acceptCapsConnection();
-    void readCapsMessage();
     void errorRemoteConnection();
+    void readCapsMessage();
 };
 
 typedef QSharedPointer<SwitchCaps> SwitchCapsPtr;
