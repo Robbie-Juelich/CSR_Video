@@ -49,7 +49,7 @@ void UdpHeartBeat::check()
 {
     if (last.secsTo(QDateTime::currentDateTime()) >= 3) {
         checkTimer->stop();
-        heartbeatTimer->stop();
+        heartbeatTimer->stop(); // ok ??
         emit dead();
     }
 }
@@ -131,9 +131,16 @@ void UdpHeartBeat::readHeartBeatMessage()
          }
     }
 
-    if (!checkTimer->isActive()){
-        checkTimer->start();
+    if ((quint8)msg.mx6ip_msg.header.ftype == 0xB4) {
+        if (!heartbeatTimer->isActive()) {
+            heartbeatTimer->start();
+        }
+    } else {
+        if (!checkTimer->isActive()) {
+            checkTimer->start();
+        }
     }
+
     last = QDateTime::currentDateTime();
 
     emit heartBeatMsgArrived();

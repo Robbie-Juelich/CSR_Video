@@ -41,6 +41,7 @@ public:
      }
      void stopChecking(){
          checkTimer->stop();
+         heartbeatTimer->stop();
      }
 
 protected:
@@ -73,7 +74,7 @@ protected:
     QTimer *checkTimer;
     QDateTime  last;
 
-    QTimer *heartbeatTimer;
+    QTimer *heartbeatTimer;  // for VideoManager send heartbeat msg to ipcam
 
 Q_SIGNALS:
     void heartBeatMsgArrived();
