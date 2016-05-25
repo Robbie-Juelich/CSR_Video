@@ -69,13 +69,15 @@ void SwitchCaps::readCapsMessage()
         if (avcaps_msg->caps.type == 0) { // video
             if (caps != m_vcaps) {  // if caps changed, then update the pipeline
                 m_vcaps = caps;
-                emit capsArrived(0, caps);
+                unsigned int width = avcaps_msg->caps.v_width;
+                unsigned int height = avcaps_msg->caps.v_height;
+                emit capsArrived(0, caps, width, height);
                 QLOG_DEBUG() << "[SwitchCaps] get vcaps : " << caps;
             }
         } else { // audio
             if (caps != m_acaps) {
                 m_acaps = caps;
-                emit capsArrived(1, caps);
+                emit capsArrived(1, caps, 0, 0);
                 QLOG_DEBUG() << "[SwitchCaps] get acaps : " << caps;
             }
         }

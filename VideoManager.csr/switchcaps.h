@@ -27,7 +27,7 @@ protected:
     QString m_vcaps;
 
 Q_SIGNALS:
-    void capsArrived(int type, QString caps);
+    void capsArrived(int type, QString caps, unsigned int width, unsigned int height);
 
 private slots:
     void errorRemoteConnection();

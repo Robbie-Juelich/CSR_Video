@@ -145,6 +145,8 @@ typedef struct{
 
 typedef struct caps_msg {
     char type; /*0: video; 1: audio*/
+    unsigned int v_width;
+    unsigned int v_height;
     int len;   /* actual length of caps string in caps_str[] */
         char caps_str[400];
 }  __attribute__((packed)) caps_msg_t;

@@ -63,8 +63,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(responseRegMsg()));
     connect(udpHeartBeatSocket.data(), SIGNAL(heartBeatMsgArrived()),
             this, SLOT(responseVideoHeartBeatMsg()));
-    connect(switchCapsSocket.data(), SIGNAL(capsArrived(int, QString)),
-            this, SLOT(responseCapsMsg(int, QString)));
+    connect(switchCapsSocket.data(), SIGNAL(capsArrived(int, QString, unsigned int, unsigned int)),
+            this, SLOT(responseCapsMsg(int, QString, unsigned int, unsigned int)));
     connect(udpHeartBeatSocket.data(), SIGNAL(dead()), this, SLOT(heartBeatDead()));
 
     outsocket = OutSocket::Instance();
@@ -163,7 +163,8 @@ void MainWindow::responseRegMsg()
     ui->groupBox_host->setEnabled(true);
 }
 
-void MainWindow::responseCapsMsg(int type, QString caps)
+void MainWindow::responseCapsMsg(int type, QString caps,
+                                 unsigned int w, unsigned int h)
 {
 //    QString a_caps = switchCapsSocket->getACaps();
 //    QString v_caps = switchCapsSocket->getVCaps();
@@ -172,6 +173,7 @@ void MainWindow::responseCapsMsg(int type, QString caps)
     }
     if (type == 0) {
         videoPlayer->updateCaps(caps);
+        videoPlayer->setFixedSize(w, h);
         QLOG_DEBUG() << "in responseCapsMsg VCaps: " << caps;
     } else {
         audioPlayerTrain->updateCaps(caps);
