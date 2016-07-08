@@ -67,9 +67,14 @@ void UdpHeartBeat::heartbeatCheck()
     for(int i = 1; i < len - 2; ++i) {
         data[len -2] += data[i];
     }
-    heartBeatQ3UdpSocket->writeBlock((char*)data, sizeof(mx6ip_msg), // or just use write ??
+#ifdef HEART_BEAT_USE_Q3
+	heartBeatQ3UdpSocket->writeBlock((char*)data, sizeof(mx6ip_msg), // or just use write ??
                                      heartbeatOutIp, heartbeatOutPort);
-    qDebug() << "Send hearbeat msg to ip: " << heartbeatOutIp
+#else
+	heartBeatUdpSocket->writeDatagram((char*)data, sizeof(mx6ip_msg),
+										heartbeatOutIp, heartbeatOutPort);
+#endif
+	qDebug() << "Send hearbeat msg to ip: " << heartbeatOutIp
                 << " port: "<< heartbeatOutPort;
 }
 

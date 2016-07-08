@@ -10,8 +10,8 @@ QSharedPointer<OutSocket> OutSocket::_instance = QSharedPointer<OutSocket>(NULL)
 
 OutSocket::OutSocket()
 {
-    bool connected;
 #if   (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
+    bool connected;
     // to avoid some problems with heartbeat
     // use another socket
     audioRtcpQ3Socket = new Q3SocketDevice(Q3SocketDevice::Datagram);
@@ -44,6 +44,7 @@ OutSocket::OutSocket()
 
 void OutSocket::readAudioOutMessage()
 {
+#if   (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
     char msg[10];
     int len;
     int bytes = audioRtcpQ3Socket->bytesAvailable();
@@ -51,10 +52,12 @@ void OutSocket::readAudioOutMessage()
         len = audioRtcpQ3Socket->read(msg, 10);
         bytes -= len;
     }
+#endif
 }
 
 void OutSocket::readVideoOutMessage()
 {
+#if   (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
     char msg[10];
     int len;
     int bytes = videoRtcpQ3Socket->bytesAvailable();
@@ -63,6 +66,7 @@ void OutSocket::readVideoOutMessage()
         len = videoRtcpQ3Socket->read(msg, 10);
         bytes -= len;
     }
+#endif
 }
 
 OutSocket::~OutSocket()

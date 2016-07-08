@@ -1,8 +1,8 @@
 
 unix {
     CONFIG += link_pkgconfig
-    PKGCONFIG += QtGStreamer-0.10 QtGStreamerUi-0.10
-    #PKGCONFIG += Qt5GStreamer-1.0 Qt5GStreamerUi-1.0
+    #PKGCONFIG += QtGStreamer-0.10 QtGStreamerUi-0.10
+    PKGCONFIG += Qt5GStreamer-1.0 Qt5GStreamerUi-1.0
 }
 
 win32 {

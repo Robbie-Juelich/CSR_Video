@@ -5,3 +5,4 @@ VideoManager
 *.suo
 /tags
 /build
+/Makefile

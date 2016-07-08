@@ -94,10 +94,10 @@ void VideoPlayer::setSocket(int socket)
     m_socket = socket;
 
     if(initialized){
-#if WIN32
+#if GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
         int port = socket;
         video_rtcpsink->setProperty("bind-port", port);
-        audio_rtcpsink->setProperty("bind-port", port);
+        video_rtcpsink->setProperty("closefd", false);
 #else
         video_rtcpsink->setProperty("sockfd", socket);
         video_rtcpsink->setProperty("closefd", false);
@@ -159,14 +159,32 @@ void VideoPlayer::makeSinkBins()
     }
 
 #if WIN32
+#if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
     // windows gstreamer 1.0
+    video_bin = QGst::Bin::fromDescription(
+        "rtph264depay ! avdec_h264 ! identity drop-buffer-flags=0x00000100 ! d3dvideosink sync=false async=false"
+    );
+#else
     video_bin = QGst::Bin::fromDescription(
         "rtph264depay ! avdec_h264 ! d3dvideosink sync=false async=false"
     );
+#endif
+
+#else  // Linux
+#if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
+    video_bin = QGst::Bin::fromDescription(
+        "rtph264depay ! avdec_h264 ! identity drop-buffer-flags=0x00000100 ! xvimagesink sync=false async=false"
+    );
+#elif GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
+    video_bin = QGst::Bin::fromDescription(
+        "rtph264depay ! avdec_h264 ! xvimagesink sync=false async=false"
+    );
+
 #else // LINUX gstreamer 0.1
     video_bin = QGst::Bin::fromDescription(
         "rtph264depay ! ffdec_h264 ! xvimagesink sync=false async=false"
     );
+#endif
 #endif
 	if(!video_bin){
 		QLOG_FATAL() << "video bin error";
@@ -238,7 +256,7 @@ void VideoPlayer::initPlayer()
     QString ip("192.168.0.10");// notice here;
 
     m_pipeline = QGst::Pipeline::create();
-#ifdef WIN32
+#if GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
     QGst::ElementPtr rtpbin = QGst::ElementFactory::make("rtpbin");
 #else
 	QGst::ElementPtr rtpbin = QGst::ElementFactory::make("gstrtpbin");
