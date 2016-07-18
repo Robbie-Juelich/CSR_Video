@@ -41,7 +41,11 @@ using namespace QsLogging;
 //#define G722
 
 VideoPlayer::VideoPlayer(QWidget *parent)
+#if HAS_QTVIDEOSINK
+    : QWidget(parent)
+#else
     : QGst::Ui::VideoWidget(parent)
+#endif
 {
     //this timer is used to tell the ui to change its position slider & label
     //every 100 ms, but only when the pipeline is playing
@@ -85,7 +89,9 @@ VideoPlayer::~VideoPlayer()
 {
     if (m_pipeline) {
         m_pipeline->setState(QGst::StateNull);
+#if !HAS_QTVIDEOSINK
         stopPipelineWatch();
+#endif
     }
 }
 
@@ -157,42 +163,74 @@ void VideoPlayer::makeSinkBins()
         m_pipeline->add(video_bin);
         return;
     }
-
-#if WIN32
-#if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
-    // windows gstreamer 1.0
-    video_bin = QGst::Bin::fromDescription(
-        "rtph264depay ! avdec_h264 ! identity drop-buffer-flags=0x00000100 ! d3dvideosink sync=false async=false"
-    );
+    video_bin = QGst::Bin::create("video bin");
+    if(!video_bin){
+        QLOG_FATAL() << "video bin error";
+    }
+    QGst::ElementPtr depay = QGst::ElementFactory::make("rtph264depay", "rtph264depay");
+    if (!depay) {
+        QLOG_FATAL()  << "Failed to create rtph264depay";
+    }
+#if GST_VERSION >=  GST_VERSION_CHECK(1, 0, 0)
+    QGst::ElementPtr dec264 = QGst::ElementFactory::make("avdec_h264", "dec264");
 #else
-    video_bin = QGst::Bin::fromDescription(
-        "rtph264depay ! avdec_h264 ! d3dvideosink sync=false async=false"
-    );
+    QGst::ElementPtr dec264 = QGst::ElementFactory::make("ffdec_h264", "dec264");
 #endif
+    if (!dec264) {
+        QLOG_FATAL()  << "Failed to create decoder for 264";
+    }
 
-#else  // Linux
 #if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
-    video_bin = QGst::Bin::fromDescription(
-        "rtph264depay ! avdec_h264 ! identity drop-buffer-flags=0x00000100 ! xvimagesink sync=false async=false"
-    );
-#elif GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
-    video_bin = QGst::Bin::fromDescription(
-        "rtph264depay ! avdec_h264 ! xvimagesink sync=false async=false"
-    );
+    QGst::ElementPtr identity = QGst::ElementFactory::make("identity", "identity");
+    if (!identity) {
+        QLOG_FATAL()  << "Failed to create identity";
+    }
+    identity->setProperty("drop-buffer-flags", 0x00000100);
+#endif
 
-#else // LINUX gstreamer 0.1
-    video_bin = QGst::Bin::fromDescription(
-        "rtph264depay ! ffdec_h264 ! xvimagesink sync=false async=false"
-    );
+#if HAS_QTVIDEOSINK
+    QGst::ElementPtr convert =  QGst::ElementFactory::make("videoconvert", "videoconvert");
+    if (!convert) {
+        QLOG_FATAL()  << "Failed to create convert";
+    }
+#if   (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    m_videosink = QGst::ElementFactory::make("qwidget5videosink", "videosink");
+#else
+    m_videosink = QGst::ElementFactory::make("qwidgetvideosink", "videosink");
+#endif
+    m_videosink->setProperty<void*>("widget", this); // ok ??
+#else
+#if WIN32  // Win
+    m_videosink = QGst::ElementFactory::make("d3dvideosink", "videosink");
+#else   // Linux
+    m_videosink = QGst::ElementFactory::make("xvimagesink", "videosink");
 #endif
 #endif
-	if(!video_bin){
-		QLOG_FATAL() << "video bin error";
-	}
-			QLOG_TRACE() << "video bin ok";
+    if (!m_videosink) {
+        QLOG_FATAL()  << "Failed to create m_videosink";
+    }
+    m_videosink->setProperty("sync", false);
+    m_videosink->setProperty("async", false);
 
-	video_bin->setName("video_bin");
+    video_bin->add(depay, dec264,
+               #if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
+                   identity,
+               #endif
+               #if HAS_QTVIDEOSINK
+                   convert,
+               #endif
+                   m_videosink);
 
+    QGst::Bin::linkMany(depay, dec264,
+                        #if GST_VERSION >=  GST_VERSION_CHECK(1, 8, 2)
+                            identity,
+                        #endif
+                        #if HAS_QTVIDEOSINK
+                            convert,
+                        #endif
+                            m_videosink);
+
+    video_bin->addPad(QGst::GhostPad::create(depay->getStaticPad("sink"), "sink"));
     video_sink_pad = video_bin->getStaticPad("sink");
     m_pipeline->add(video_bin);
 }
@@ -235,7 +273,9 @@ void VideoPlayer::rebuildPipeline()
 {
     if (m_pipeline) {
         m_pipeline->setState(QGst::StateNull);
+#if !HAS_QTVIDEOSINK
         stopPipelineWatch();
+#endif
     }
 
     initialized = false;
@@ -332,7 +372,9 @@ void VideoPlayer::initPlayer()
 
     QGlib::connect(rtpbin, "pad-added", this, &VideoPlayer::onRtpBinPadAdded);
     QGlib::connect(rtpbin, "pad-removed", this, &VideoPlayer::onRtpBinPadRemoved);
+#if !HAS_QTVIDEOSINK
     watchPipeline(m_pipeline);
+#endif
 
     QGst::BusPtr bus = m_pipeline->bus();
     bus->addSignalWatch();

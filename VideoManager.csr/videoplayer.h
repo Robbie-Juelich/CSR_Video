@@ -19,6 +19,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "config.h"
 #include <QtCore/QTimer>
 #include <QtCore/QTime>
 #include <QGst/Pipeline>
@@ -26,7 +27,12 @@
 #include<QtNetwork>
 #include <QGst/Ui/VideoWidget>
 
-class VideoPlayer : public QGst::Ui::VideoWidget
+class VideoPlayer : public
+        #if HAS_QTVIDEOSINK
+        QWidget
+        #else
+        QGst::Ui::VideoWidget
+        #endif
 {
     Q_OBJECT
 
@@ -94,6 +100,7 @@ private:
     QGst::ElementPtr video_rtcpsink;
 
     QGst::BinPtr video_bin;
+    QGst::ElementPtr m_videosink;
 
     QGst::PadPtr video_pad;
     QGst::PadPtr video_sink_pad;
