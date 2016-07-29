@@ -37,8 +37,8 @@ OutSocket::OutSocket()
 //            SLOT(readVideoOutMessage()));
 
 #else
-    aSocket = AUDIO_OUT_PORT;
-    vSocket = VIDEO_OUT_PORT;
+    aSocket = BIND_OUT_PORT;
+    vSocket = BIND_OUT_PORT;
 #endif
 }
 
