@@ -2,13 +2,17 @@
 #define UDPHEARTBEAT_H
 
 #include<QtNetwork>
+#include "config.h"
+#ifdef HEART_BEAT_USE_Q3
 #include <Q3SocketDevice>
 #include<QSocketNotifier>
+#else
+#include<QUdpSocket>
+#endif
 #include"videoplayer.h"
 #include "msg.h"
 #include<QTimer>
 
-#define HEART_BEAT_USE_Q3
 
 class UdpHeartBeat : public QObject
 {

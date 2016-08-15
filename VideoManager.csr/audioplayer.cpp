@@ -15,6 +15,7 @@
 #include "socketports.h"
 #include "audioplayer.h"
 #include "msg.h"
+#include "config.h"
 
 using namespace QsLogging;
 
@@ -51,10 +52,12 @@ void AudioPlayer::onBusMessage(const QGst::MessagePtr & message)
 void AudioPlayer::setSocket(int socket)
 {
     if(initialized) {
-#ifdef WIN32
-        int port = socket;
+#if GST_VERSION  >= GST_VERSION_CHECK(1, 0, 0)
+		int port = socket;
         audio_rtp_sink->setProperty("bind-port", port);
         audio_rtcp_sink->setProperty("bind-port", port);
+        audio_rtp_sink->setProperty("closefd", false);
+        audio_rtcp_sink->setProperty("closefd", false);
 #else
         audio_rtp_sink->setProperty("sockfd", socket);
         audio_rtcp_sink->setProperty("sockfd", socket);
@@ -111,7 +114,7 @@ void AudioPlayer::initPlayer()
 //    QString ip("192.168.0.10");// notice here;
 
     m_pipeline = QGst::Pipeline::create();
-#ifdef WIN32
+#if GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
     QGst::ElementPtr rtpbin_audio = QGst::ElementFactory::make("rtpbin");
 #else
     QGst::ElementPtr rtpbin_audio = QGst::ElementFactory::make("gstrtpbin");
@@ -130,6 +133,10 @@ void AudioPlayer::initPlayer()
 #else
 	#ifdef WIN32
 	QGst::BinPtr src_bin = QGst::Bin::fromDescription("directsoundsrc ! "
+                                                      " audioconvert ! audioresample ! "
+                                                      " avenc_g722 bitrate=8000 ! rtpg722pay mtu=1024 ");
+	#elif GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
+	QGst::BinPtr src_bin = QGst::Bin::fromDescription("alsasrc ! "
                                                       " audioconvert ! audioresample ! "
                                                       " avenc_g722 bitrate=8000 ! rtpg722pay mtu=1024 ");
 	#else

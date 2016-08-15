@@ -16,6 +16,7 @@
 #include "socketports.h"
 #include "audioplayertrain.h"
 #include "msg.h"
+#include "config.h"
 
 using namespace QsLogging;
 
@@ -52,10 +53,10 @@ void AudioPlayerTrain::onBusMessage(const QGst::MessagePtr & message)
 void AudioPlayerTrain::setSocket(int socket)
 {
     if(initialized) {
-#ifdef WIN32
+#if GST_VERSION >=  GST_VERSION_CHECK(1, 0, 0)
         int port = socket;
-        audio_rtp_sink->setProperty("bind-port", port);
-        audio_rtcp_sink->setProperty("bind-port", port);
+        audio_rtcpsink->setProperty("bind-port", port);
+        audio_rtcpsink->setProperty("closefd", false);
 #else
         audio_rtcpsink->setProperty("sockfd", socket);
         audio_rtcpsink->setProperty("closefd", false);
@@ -78,13 +79,13 @@ void AudioPlayerTrain::makeSinkBins()
     if(!rtppcmadepay) {
         qFatal("Failed to create rtppcmadepay");
     }
-#ifdef WIN32
-    QGst::ElementPtr alawdec = QGst::ElementFactory::make("ffdec_g722", "rtp g722");
+#ifdef GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
+    QGst::ElementPtr alawdec = QGst::ElementFactory::make("avdec_g722", "rtp g722");
     if(!alawdec) {
         qFatal("Failed to create ffdec_g722");
     }
 #else
-    QGst::ElementPtr alawdec = QGst::ElementFactory::make("avdec_g722", "rtp g722");
+    QGst::ElementPtr alawdec = QGst::ElementFactory::make("ffdec_g722", "rtp g722");
     if(!alawdec) {
         qFatal("Failed to create avdec_g722");
     }
@@ -112,9 +113,15 @@ void AudioPlayerTrain::makeSinkBins()
     if(!audio_filter) {
         QLOG_FATAL()  << "Failed to create audio_filter";
     }
-    audio_filter->setProperty("caps", QGst::Caps::fromString(
+#if GST_VERSION  >=  GST_VERSION_CHECK(1, 0, 0)
+	audio_filter->setProperty("caps", QGst::Caps::fromString(
+                                  "audio/x-raw, endianness=(int)1234, signed=(boolean)true, width=(int)16, "
+                                  "depth=(int)16, rate=(int)44100, channels=(int)1"));
+#else
+	audio_filter->setProperty("caps", QGst::Caps::fromString(
                                   "audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, "
                                   "depth=(int)16, rate=(int)44100, channels=(int)1"));
+#endif
 
 #if WIN32
     QGst::ElementPtr alsasink = QGst::ElementFactory::make("directsoundsink", "directsoundsink");
@@ -134,9 +141,17 @@ void AudioPlayerTrain::makeSinkBins()
 
     audio_bin = QGst::Bin::create();
     audio_bin->add(rtppcmadepay, alawdec, audioresample,
+#if GST_VERSION  >=  GST_VERSION_CHECK(1, 0, 0)
+             audioconvert, alsasink);
+#else
              audioconvert, audio_filter, alsasink);
+#endif
     QGst::Bin::linkMany(rtppcmadepay, alawdec, audioresample,
+#if GST_VERSION  >=  GST_VERSION_CHECK(1, 0, 0)
+                        audioconvert, alsasink);
+#else
                         audioconvert, audio_filter, alsasink);
+#endif
     audio_bin->addPad(QGst::GhostPad::create(rtppcmadepay->getStaticPad("sink"), "sink"));
     audio_bin->setName("audio_bin");
 
@@ -226,8 +241,11 @@ void AudioPlayerTrain::initPlayer()
 
     bool ret = false;
     m_pipeline = QGst::Pipeline::create();
-
+#if GST_VERSION >= GST_VERSION_CHECK(1, 0, 0)
+    QGst::ElementPtr rtpbin = QGst::ElementFactory::make("rtpbin");
+#else
     QGst::ElementPtr rtpbin = QGst::ElementFactory::make("gstrtpbin");
+#endif
     if(!rtpbin){
         QLOG_FATAL() << "Failed to create rtpbin_audio";
     }

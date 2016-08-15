@@ -1,8 +1,13 @@
 
 unix {
     CONFIG += link_pkgconfig
-    PKGCONFIG += QtGStreamer-0.10 QtGStreamerUi-0.10
-    #PKGCONFIG += Qt5GStreamer-1.0 Qt5GStreamerUi-1.0
+    greaterThan(QT_MAJOR_VERSION, 4){  ### qt version is 5
+        message("Qt5GStreamer-1.0")
+        PKGCONFIG += Qt5GStreamer-1.0 Qt5GStreamerUi-1.0
+    } else {
+        message("QtGStreamer-0.10")
+        PKGCONFIG += QtGStreamer-0.10 QtGStreamerUi-0.10
+    }
 }
 
 win32 {

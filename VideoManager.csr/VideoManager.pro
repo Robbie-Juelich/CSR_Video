@@ -17,6 +17,10 @@ TEMPLATE = app
 
 CONFIG += silent
 
+OBJECTS_DIR = build
+MOC_DIR = build
+RCC_DIR = build
+UI_DIR = build
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -25,7 +29,7 @@ SOURCES += main.cpp\
         audioplayer.cpp \
     udpregister.cpp \
     udpheartbeat.cpp \
-    outsocket_q3.cpp \
+    outsocket.cpp \
     sendmsg.cpp \
     audioplayertrain.cpp
 
@@ -39,7 +43,8 @@ HEADERS  += mainwindow.h \
     outsocket.h \
     socketports.h \
     sendmsg.h \
-    audioplayertrain.h
+    audioplayertrain.h \
+    config.h
 
 FORMS    += mainwindow.ui
 
