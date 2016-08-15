@@ -141,9 +141,17 @@ void AudioPlayerTrain::makeSinkBins()
 
     audio_bin = QGst::Bin::create();
     audio_bin->add(rtppcmadepay, alawdec, audioresample,
+#if GST_VERSION  >=  GST_VERSION_CHECK(1, 0, 0)
+             audioconvert, alsasink);
+#else
              audioconvert, audio_filter, alsasink);
+#endif
     QGst::Bin::linkMany(rtppcmadepay, alawdec, audioresample,
+#if GST_VERSION  >=  GST_VERSION_CHECK(1, 0, 0)
+                        audioconvert, alsasink);
+#else
                         audioconvert, audio_filter, alsasink);
+#endif
     audio_bin->addPad(QGst::GhostPad::create(rtppcmadepay->getStaticPad("sink"), "sink"));
     audio_bin->setName("audio_bin");
 
