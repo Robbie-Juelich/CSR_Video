@@ -18,7 +18,7 @@ using namespace QsLogging;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow), videoWidth(0), videoHeight(0)
 {
     ui->setupUi(this);
 
@@ -109,6 +109,14 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+void MainWindow::setVideoPlayerSize(unsigned int w, unsigned int h)
+{
+    videoWidth = w;
+    videoHeight = h;
+}
+#endif
+
 void MainWindow::heartBeatDead()
 {
     QMessageBox::warning(this, QString::fromLocal8Bit("连接断开"),
@@ -173,6 +181,10 @@ void MainWindow::responseCapsMsg(int type, QString caps,
     }
     if (type == 0) {
         videoPlayer->updateCaps(caps);
+        if (videoWidth >= w && videoHeight >= h) {
+            w = videoWidth;
+            h = videoHeight;
+        }
         videoPlayer->setFixedSize(w, h);
         QLOG_DEBUG() << "in responseCapsMsg VCaps: " << caps;
     } else {

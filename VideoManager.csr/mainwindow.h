@@ -28,6 +28,9 @@ public:
     ~MainWindow();
     bool connectValid();
     bool ipPrepared();
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    void setVideoPlayerSize(unsigned int w, unsigned int h);
+#endif
 
 //public slots:
 
@@ -104,6 +107,10 @@ private:
     SwitchCapsPtr switchCapsSocket;
     OutSocketPtr outsocket;
     SendMsg sendMsg;
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    unsigned int videoWidth;
+    unsigned int videoHeight;
+#endif
 };
 
 #endif // MAINWINDOW_H
