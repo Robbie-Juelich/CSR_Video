@@ -11,6 +11,7 @@
 #else
 #include<sys/stat.h>
 #endif
+#include "configdialog.h"
 
 using namespace QsLogging;
 
@@ -55,7 +56,10 @@ MainWindow::MainWindow(QWidget *parent) :
         audioPlayer->setIP(QHostAddress(ip), 5003, 1);
     }
 
-    udpHeartBeatSocket = UdpHeartBeat::Instance();
+    createSettings();
+    loadSettings();
+
+    udpHeartBeatSocket = UdpHeartBeat::Instance(heartbeat_timeout);
     udpRegisterSocket = UdpRegister::Instance();
     switchCapsSocket = SwitchCaps::Instance();
 
@@ -205,6 +209,24 @@ void MainWindow::onStateChanged()
     //ui->pushButton_10->setEnabled(state != QGst::StatePlaying);// 开启视频传输按钮
 }
 
+void MainWindow::do_send_start_msg()
+{
+    videoPlayer->toChangeMode(0x0);
+
+    msg_t msg;
+    int i = 0;
+    for (i = 0; i < 2; ++i) {
+        msg = sendMsg.wrapCamMsg(cur_dev_id, 0, 0x0);
+        sendMsg.send(msg);
+
+        msg = sendMsg.wrapVideoStartMsg(cur_dev_id);
+        sendMsg.send(msg);
+
+        msg = sendMsg.wrapAudioStartMsg(cur_dev_id);
+        sendMsg.send(msg);
+    }
+    remote_started = true;
+}
 
 /*
  * 初始化 发送开始命令 主机接收后发送UDP数据包
@@ -212,19 +234,12 @@ void MainWindow::onStateChanged()
 */
 void MainWindow::on_pushButton_link_remote_clicked()
 {
-    videoPlayer->toChangeMode(0x0);
-
-    msg_t msg;
-    msg = sendMsg.wrapCamMsg(cur_dev_id, 0, 0x0);
-    sendMsg.send(msg);
-
-    msg = sendMsg.wrapVideoStartMsg(cur_dev_id);
-    sendMsg.send(msg);
-
-    msg = sendMsg.wrapAudioStartMsg(cur_dev_id);
-    sendMsg.send(msg);
-
-    remote_started = true;
+    QLOG_DEBUG() << "Try connect to ipcam...";
+    do_send_start_msg();
+    connect(&connectTimer, SIGNAL(timeout()),
+            this, SLOT(onConnectTimeout()));
+    start_time = QDateTime::currentDateTime();
+    connectTimer.start(1000);
 }
 
 void MainWindow::on_pushButton_all_off_clicked()
@@ -381,6 +396,30 @@ void MainWindow::on_pushButton_audio_off_clicked()
     audioPlayer->pause();
 }
 
+void MainWindow::onConnectTimeout()
+{
+//    if(videoPlayer->state() == QGst::StatePlaying) {
+//        QLOG_DEBUG() << "Connect ok !";
+//        connectTimer.stop();
+//        return;
+//    }
+
+    if (videoPlayer->ipPrepared()) {
+        QLOG_DEBUG() << "Connect ok !";
+        connectTimer.stop();
+        return;
+    }
+    if (!videoPlayer->ipPrepared() && !audioPlayerTrain->ipPrepared()) {
+        if (start_time.secsTo(QDateTime::currentDateTime()) >= connect_timeout) {
+            QMessageBox::warning(this, "连接超时", "连接超时");
+            connectTimer.stop();
+        } else {
+            QLOG_DEBUG() << "Try connect to ipcam again...";
+            do_send_start_msg();
+        }
+    }
+}
+
 void MainWindow::on_test()
 {
     if(videoPlayer->getCurMode() == 0x1) {
@@ -506,7 +545,7 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
 }
 
 
-void MainWindow::on_pushButton_update_clicked()
+void MainWindow::on_pushButton_update_image_clicked()
 {
 	QMessageBox::StandardButton rb = QMessageBox::warning(this, QString::fromLocal8Bit("警告"), 
 		QString::fromLocal8Bit("更新系统时请确保列车视频系统供电正常，确定更新系统？"),
@@ -534,7 +573,7 @@ void MainWindow::on_pushButton_update_clicked()
     ui->groupBox_video->setEnabled(false);
 }
 
-void MainWindow::on_pushButton_update_2_clicked()
+void MainWindow::on_pushButton_update_config_clicked()
 {
 	QMessageBox::StandardButton rb = QMessageBox::warning(this, QString::fromLocal8Bit("警告"), 
 		QString::fromLocal8Bit("更新系统时请确保列车视频系统供电正常，确定更新配置？"),
@@ -575,4 +614,39 @@ void MainWindow::on_pushButton_2_clicked()
     msg_t msg;
     msg = sendMsg.wrapMVMsgTest(true);
     sendMsg.send(msg);
+}
+
+void MainWindow::on_pushButton_local_config_clicked()
+{
+    ConfigDialog diag(connect_timeout, heartbeat_timeout, this);
+
+    if (diag.exec() == QDialog::Accepted) {
+        connect_timeout = diag.get_conn_timeout();
+        heartbeat_timeout = diag.get_heart_timeout();
+        udpHeartBeatSocket->setTimeOut(heartbeat_timeout);
+        saveSettings();
+    }
+}
+
+void MainWindow::saveSettings()
+{
+    settings->beginGroup("Configuration");
+    settings->setValue("connect-timeout",  connect_timeout);
+    settings->setValue("heartbeat-timeout",  heartbeat_timeout);
+    settings->endGroup();
+}
+
+void MainWindow::loadSettings()
+{
+    settings->beginGroup("Configuration");
+    connect_timeout = settings->value("connect-timeout", default_conn_timeout).toInt();
+    heartbeat_timeout = settings->value("heartbeat-timeout", default_heart_timeout).toInt();
+    settings->endGroup();
+}
+
+void MainWindow::createSettings()
+{
+    QString file =  "video.ini";
+    settings = new QSettings(file, QSettings::IniFormat, this);
+    return;
 }

@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     udpheartbeat.cpp \
     outsocket.cpp \
     sendmsg.cpp \
-    audioplayertrain.cpp
+    audioplayertrain.cpp \
+    configdialog.cpp
 
 HEADERS  += mainwindow.h \
                 switchcaps.h \
@@ -44,15 +45,18 @@ HEADERS  += mainwindow.h \
     socketports.h \
     sendmsg.h \
     audioplayertrain.h \
-    config.h
+    config.h \
+    configdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    configdialog.ui
 
 INCLUDEPATH += $$PWD
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 RCC_DIR = build/rcc
 
+QMAKE_CXXFLAGS += -fno-stack-protector
 
 include(qtgstreamer.pri)
 include(qslog/QsLog.pri)

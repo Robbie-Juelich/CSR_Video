@@ -5,6 +5,8 @@
 #include"videoplayer.h"
 #include "msg.h"
 
+const int default_conn_timeout = 10;
+
 class UdpRegister : public QObject
 {
     Q_OBJECT

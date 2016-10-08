@@ -13,6 +13,7 @@
 #include"switchcaps.h"
 #include "sendmsg.h"
 #include"outsocket.h"
+#include <QSettings>
 
 namespace Ui {
 class MainWindow;
@@ -34,6 +35,11 @@ public:
 
 //public slots:
 
+private:
+    void createSettings();
+    void loadSettings();
+    void saveSettings();
+    void do_send_start_msg();
 
 private slots:
     void responseRegMsg();
@@ -45,6 +51,8 @@ private slots:
     void onStateChanged();
 
     void on_test();
+
+    void onConnectTimeout();
 
     void on_pushButton_test_on_clicked();
 
@@ -86,13 +94,15 @@ private slots:
 
     void on_pushButton_2_clicked();
 
-    void on_pushButton_update_clicked();
+    void on_pushButton_update_image_clicked();
 
-    void on_pushButton_update_2_clicked();
+    void on_pushButton_update_config_clicked();
 
     void on_pushButton_clicked();
 
     void heartBeatDead();
+
+    void on_pushButton_local_config_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -111,6 +121,11 @@ private:
     unsigned int videoWidth;
     unsigned int videoHeight;
 #endif
+    QSettings *settings;
+    int connect_timeout;
+    int heartbeat_timeout;
+    QDateTime  start_time;
+    QTimer connectTimer;
 };
 
 #endif // MAINWINDOW_H

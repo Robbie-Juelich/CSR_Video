@@ -9,7 +9,8 @@ QSharedPointer <UdpHeartBeat> UdpHeartBeat::_instance =
 
 //UdpHeartBeat* UdpHeartBeat::_instance = NULL;
 
-UdpHeartBeat::UdpHeartBeat()
+UdpHeartBeat::UdpHeartBeat(int timeout):
+    mTimeOut(timeout)
 {
     bool connected;
 #ifdef HEART_BEAT_USE_Q3
@@ -34,7 +35,7 @@ UdpHeartBeat::UdpHeartBeat()
 #endif
 
     checkTimer = new QTimer(this);
-    checkTimer->setInterval(3000);//
+    checkTimer->setInterval(1000);
 
     last = QDateTime::currentDateTime();
 
@@ -47,7 +48,7 @@ UdpHeartBeat::UdpHeartBeat()
 
 void UdpHeartBeat::check()
 {
-    if (last.secsTo(QDateTime::currentDateTime()) >= 3) {
+    if (last.secsTo(QDateTime::currentDateTime()) >= mTimeOut) {
         checkTimer->stop();
         heartbeatTimer->stop(); // ok ??
         emit dead();
@@ -153,14 +154,14 @@ void UdpHeartBeat::readHeartBeatMessage()
 
 QSharedPointer<UdpHeartBeat>
 //UdpHeartBeat*
-UdpHeartBeat::Instance()
+UdpHeartBeat::Instance(int timeout)
 {
     static QMutex mutex;
     if(!_instance){
         QMutexLocker locker(&mutex);
         if(!_instance){
             _instance = QSharedPointer<UdpHeartBeat>
-                    (new UdpHeartBeat());
+                    (new UdpHeartBeat(timeout));
         }
     }
     return _instance;

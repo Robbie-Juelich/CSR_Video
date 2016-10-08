@@ -13,12 +13,13 @@
 #include "msg.h"
 #include<QTimer>
 
+const int default_heart_timeout = 10;
 
 class UdpHeartBeat : public QObject
 {
     Q_OBJECT
 public:
-    static QSharedPointer<UdpHeartBeat> Instance() ;
+    static QSharedPointer<UdpHeartBeat> Instance(int timeout) ;
     //static UdpHeartBeat *Instance();
 
 
@@ -48,8 +49,12 @@ public:
          heartbeatTimer->stop();
      }
 
+     void setTimeOut(int timeout) {
+         mTimeOut = timeout;
+     }
+
 protected:
-    UdpHeartBeat();
+    UdpHeartBeat(int timeout);
 
 #ifdef HEART_BEAT_USE_Q3
      Q3SocketDevice* heartBeatQ3UdpSocket;
@@ -79,6 +84,8 @@ protected:
     QDateTime  last;
 
     QTimer *heartbeatTimer;  // for VideoManager send heartbeat msg to ipcam
+
+    int mTimeOut;
 
 Q_SIGNALS:
     void heartBeatMsgArrived();
