@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     createSettings();
     loadSettings();
 
-    udpHeartBeatSocket = UdpHeartBeat::Instance(heartbeat_timeout);
+    udpHeartBeatSocket = UdpHeartBeat::Instance(heartbeat_timeout,yellow_timeout);
     udpRegisterSocket = UdpRegister::Instance();
     switchCapsSocket = SwitchCaps::Instance();
 
@@ -71,17 +71,24 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(responseCapsMsg(int, QString, unsigned int, unsigned int)));
     connect(udpHeartBeatSocket.data(), SIGNAL(dead()), this, SLOT(heartBeatDead()));
 
+    connect(udpHeartBeatSocket.data(), SIGNAL(heartBeatMsgArrived()),
+            this, SLOT(green() ) );//new add
     outsocket = OutSocket::Instance();
 
     videoPlayer->setSocket(outsocket->getVSocket());
     audioPlayer->setSocket(outsocket->getASocket());
     audioPlayerTrain->setSocket(outsocket->getVSocket());
 
+    ui->label_signal->setPixmap(QPixmap(":/images/gray.png") );
+
+    connect(udpHeartBeatSocket.data(), SIGNAL(sYellow() ), this, SLOT(yellowwarn() ) );
+
     ui->groupBox_system->setEnabled(false);
     ui->groupBox_video->setEnabled(false);
     ui->groupBox_test->setEnabled(false);
     ui->groupBox_host->setEnabled(false);
 
+    ui->label_signal->update();//new add
 #ifdef NO_SHANG_WEI_JI
     udpRegisterSocket->no_shangweiji_test();
 #endif
@@ -123,6 +130,8 @@ void MainWindow::setVideoPlayerSize(unsigned int w, unsigned int h)
 
 void MainWindow::heartBeatDead()
 {
+     ui->label_signal->setPixmap(QPixmap(":/images/red.png") );//new add
+
     QMessageBox::warning(this, QString::fromLocal8Bit("连接断开"),
         QString::fromLocal8Bit("连接断开, 请重新连接"), QMessageBox::Ok);
 
@@ -618,12 +627,15 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_pushButton_local_config_clicked()
 {
-    ConfigDialog diag(connect_timeout, heartbeat_timeout, this);
+    ConfigDialog diag(connect_timeout, heartbeat_timeout, yellow_timeout,this);
+
 
     if (diag.exec() == QDialog::Accepted) {
         connect_timeout = diag.get_conn_timeout();
         heartbeat_timeout = diag.get_heart_timeout();
-        udpHeartBeatSocket->setTimeOut(heartbeat_timeout);
+     //   yellow_timeout=diag.get_yellow_timeout();
+        yellow_timeout=diag.get_yellow_timeout();
+        udpHeartBeatSocket->setTimeOut(heartbeat_timeout,yellow_timeout);
         saveSettings();
     }
 }
@@ -633,6 +645,8 @@ void MainWindow::saveSettings()
     settings->beginGroup("Configuration");
     settings->setValue("connect-timeout",  connect_timeout);
     settings->setValue("heartbeat-timeout",  heartbeat_timeout);
+    //settings->setValue("yellow-warning-timeout",yellow_timeout);
+    settings->setValue("net-warning-timeout",yellow_timeout);
     settings->endGroup();
 }
 
@@ -641,6 +655,8 @@ void MainWindow::loadSettings()
     settings->beginGroup("Configuration");
     connect_timeout = settings->value("connect-timeout", default_conn_timeout).toInt();
     heartbeat_timeout = settings->value("heartbeat-timeout", default_heart_timeout).toInt();
+    //yellow_timeout=settings->value("yellow-warning-timeout",default_yellow_timeout).toInt();
+    yellow_timeout=settings->value("net-warning-timeout",default_yellow_timeout).toInt();
     settings->endGroup();
 }
 
@@ -649,4 +665,18 @@ void MainWindow::createSettings()
     QString file =  "video.ini";
     settings = new QSettings(file, QSettings::IniFormat, this);
     return;
+}
+
+
+void MainWindow::green()
+{
+    ui->label_signal->setPixmap(QPixmap(":/images/green.png") );
+    //udpHeartBeatSocket->checkTimer->stop();
+}
+
+
+void MainWindow::yellowwarn()
+{
+     ui->label_signal->setPixmap(QPixmap(":/images/yellow.png") );
+     //ui->label_signal->update();
 }

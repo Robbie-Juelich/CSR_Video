@@ -103,6 +103,8 @@ private slots:
     void heartBeatDead();
 
     void on_pushButton_local_config_clicked();
+    void green();//new add
+    void yellowwarn();
 
 private:
     Ui::MainWindow *ui;
@@ -124,6 +126,7 @@ private:
     QSettings *settings;
     int connect_timeout;
     int heartbeat_timeout;
+    int yellow_timeout;//new add
     QDateTime  start_time;
     QTimer connectTimer;
 };

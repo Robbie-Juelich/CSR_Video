@@ -9,8 +9,8 @@ QSharedPointer <UdpHeartBeat> UdpHeartBeat::_instance =
 
 //UdpHeartBeat* UdpHeartBeat::_instance = NULL;
 
-UdpHeartBeat::UdpHeartBeat(int timeout):
-    mTimeOut(timeout)
+UdpHeartBeat::UdpHeartBeat(int timeout,int y_timeout):
+    mTimeOut(timeout),yTimeOut(y_timeout)
 {
     bool connected;
 #ifdef HEART_BEAT_USE_Q3
@@ -44,8 +44,19 @@ UdpHeartBeat::UdpHeartBeat(int timeout):
     heartbeatTimer = new QTimer(this);
     heartbeatTimer->setInterval(1000);
     connect(heartbeatTimer, SIGNAL(timeout()), this, SLOT(heartbeatCheck()));
+
+    yellowsignalTimer=new QTimer(this); //new add
+    yellowsignalTimer->setInterval(1000);//yellow signal
+    connect(yellowsignalTimer, SIGNAL(timeout()), this, SLOT(yellowsignalcheck() ) );
 }
 
+void UdpHeartBeat::yellowsignalcheck()
+{
+    if(last.secsTo(QDateTime::currentDateTime()) >= yTimeOut){
+        yellowsignalTimer->stop();
+        emit sYellow();
+    }
+}
 void UdpHeartBeat::check()
 {
     if (last.secsTo(QDateTime::currentDateTime()) >= mTimeOut) {
@@ -145,6 +156,9 @@ void UdpHeartBeat::readHeartBeatMessage()
         if (!checkTimer->isActive()) {
             checkTimer->start();
         }
+        if(!yellowsignalTimer->isActive()){
+             yellowsignalTimer->start();//new add
+        }
     }
 
     last = QDateTime::currentDateTime();
@@ -154,14 +168,14 @@ void UdpHeartBeat::readHeartBeatMessage()
 
 QSharedPointer<UdpHeartBeat>
 //UdpHeartBeat*
-UdpHeartBeat::Instance(int timeout)
+UdpHeartBeat::Instance(int timeout,int y_timeout)
 {
     static QMutex mutex;
     if(!_instance){
         QMutexLocker locker(&mutex);
         if(!_instance){
             _instance = QSharedPointer<UdpHeartBeat>
-                    (new UdpHeartBeat(timeout));
+                    (new UdpHeartBeat(timeout,y_timeout));
         }
     }
     return _instance;
