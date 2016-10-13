@@ -52,6 +52,8 @@ void SwitchCaps::readCapsMessage()
     quint16 sender_port;
     quint16 recv_port;
 
+    capsMsgarrive();
+
     while(udpSocket->hasPendingDatagrams()) {
         // Returns the size of the first pending UDP datagram.
         qint32 bytes = udpSocket->pendingDatagramSize();

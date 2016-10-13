@@ -46,6 +46,8 @@ private slots:
 
     void responseCapsMsg(int type, QString caps, unsigned int w, unsigned int h);
 
+    void rCapsMsg();//new add1
+
     void responseVideoHeartBeatMsg();
 
     void onStateChanged();
@@ -129,6 +131,7 @@ private:
     int yellow_timeout;//new add
     QDateTime  start_time;
     QTimer connectTimer;
+    bool capsMsgarrive;
 };
 
 #endif // MAINWINDOW_H

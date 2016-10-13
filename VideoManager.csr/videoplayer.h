@@ -62,7 +62,9 @@ public:
         if(cur_mode) cur_mode = 0;
         else cur_mode = 1;
     }
-
+    void setVpipelinePlay(){
+        m_pipeline->setState(QGst::StatePlaying);
+    }
     QString name;
 
 public Q_SLOTS:
@@ -83,7 +85,6 @@ private:
     void onRtpBinPadRemoved(const QGst::PadPtr &pad);
     void makeSinkBins();
     void rebuildPipeline();
-
 
     void setACaps(QString caps);
     void setVCaps(QString caps);

@@ -69,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(responseVideoHeartBeatMsg()));
     connect(switchCapsSocket.data(), SIGNAL(capsArrived(int, QString, unsigned int, unsigned int)),
             this, SLOT(responseCapsMsg(int, QString, unsigned int, unsigned int)));
+      connect(switchCapsSocket.data(), SIGNAL(capsMsgarrive()),this, SLOT(rCapsMsg()));//new add1
     connect(udpHeartBeatSocket.data(), SIGNAL(dead()), this, SLOT(heartBeatDead()));
 
     connect(udpHeartBeatSocket.data(), SIGNAL(heartBeatMsgArrived()),
@@ -134,7 +135,6 @@ void MainWindow::heartBeatDead()
 
     QMessageBox::warning(this, QString::fromLocal8Bit("连接断开"),
         QString::fromLocal8Bit("连接断开, 请重新连接"), QMessageBox::Ok);
-
     videoPlayer->unsetIP();
     audioPlayer->unsetIP();
     audioPlayerTrain->unsetIP();
@@ -244,11 +244,16 @@ void MainWindow::do_send_start_msg()
 void MainWindow::on_pushButton_link_remote_clicked()
 {
     QLOG_DEBUG() << "Try connect to ipcam...";
+    if(capsMsgarrive){
+            capsMsgarrive=false;//new add1
+    }
     do_send_start_msg();
     connect(&connectTimer, SIGNAL(timeout()),
             this, SLOT(onConnectTimeout()));
     start_time = QDateTime::currentDateTime();
     connectTimer.start(1000);
+    videoPlayer->setVpipelinePlay();
+    videoPlayer->update();
 }
 
 void MainWindow::on_pushButton_all_off_clicked()
@@ -413,12 +418,14 @@ void MainWindow::onConnectTimeout()
 //        return;
 //    }
 
-    if (videoPlayer->ipPrepared()) {
+    if (capsMsgarrive) {
         QLOG_DEBUG() << "Connect ok !";
         connectTimer.stop();
         return;
     }
-    if (!videoPlayer->ipPrepared() && !audioPlayerTrain->ipPrepared()) {
+
+    if(!capsMsgarrive){
+
         if (start_time.secsTo(QDateTime::currentDateTime()) >= connect_timeout) {
             QMessageBox::warning(this, "连接超时", "连接超时");
             connectTimer.stop();
@@ -427,6 +434,21 @@ void MainWindow::onConnectTimeout()
             do_send_start_msg();
         }
     }
+
+//    if (videoPlayer->ipPrepared()) {
+//        QLOG_DEBUG() << "Connect ok !";
+//        connectTimer.stop();
+//        return;
+//    }
+//    if (!videoPlayer->ipPrepared() && !audioPlayerTrain->ipPrepared()) {
+//        if (start_time.secsTo(QDateTime::currentDateTime()) >= connect_timeout) {
+//            QMessageBox::warning(this, "连接超时", "连接超时");
+//            connectTimer.stop();
+//        } else {
+//            QLOG_DEBUG() << "Try connect to ipcam again...";
+//            do_send_start_msg();
+//        }
+//    }
 }
 
 void MainWindow::on_test()
@@ -679,4 +701,10 @@ void MainWindow::yellowwarn()
 {
      ui->label_signal->setPixmap(QPixmap(":/images/yellow.png") );
      //ui->label_signal->update();
+}
+
+
+void MainWindow::rCapsMsg()//new add1
+{
+    capsMsgarrive=true;
 }
