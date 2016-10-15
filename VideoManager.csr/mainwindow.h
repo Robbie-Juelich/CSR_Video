@@ -130,7 +130,7 @@ private:
     int heartbeat_timeout;
     int yellow_timeout;//new add
     QDateTime  start_time;
-    QTimer connectTimer;
+    QTimer *connectTimer;
     bool capsMsgarrive;
 };
 

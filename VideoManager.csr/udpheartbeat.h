@@ -50,6 +50,10 @@ public:
          checkTimer->stop();
          heartbeatTimer->stop();
      }
+     void stopYellowsignalcheck()
+     {
+         yellowsignalTimer->stop();
+     }
 
 /*   void setTimeOut(int y_timeout,int y_timeout) {
          yTimeOut = y_timeout;

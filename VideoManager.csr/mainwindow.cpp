@@ -56,6 +56,11 @@ MainWindow::MainWindow(QWidget *parent) :
         audioPlayer->setIP(QHostAddress(ip), 5003, 1);
     }
 
+    connectTimer=new QTimer(this);
+    connectTimer->setInterval(1000);
+    connect(connectTimer, SIGNAL(timeout()),
+                 this, SLOT(onConnectTimeout()) );
+
     createSettings();
     loadSettings();
 
@@ -248,18 +253,26 @@ void MainWindow::on_pushButton_link_remote_clicked()
             capsMsgarrive=false;//new add1
     }
     do_send_start_msg();
-    connect(&connectTimer, SIGNAL(timeout()),
-            this, SLOT(onConnectTimeout()));
+
     start_time = QDateTime::currentDateTime();
-    connectTimer.start(1000);
+    if(!connectTimer->isActive()){
+       connectTimer->start();
+    }
+    if(videoPlayer->state() != QGst::StatePlaying) {
+        videoPlayer->setVpipelinePlay();
+    }
     videoPlayer->setVpipelinePlay();
-    videoPlayer->update();
+   // videoPlayer->update();
 }
 
 void MainWindow::on_pushButton_all_off_clicked()
 {
 
     udpHeartBeatSocket->stopChecking();
+    udpHeartBeatSocket->stopYellowsignalcheck();
+    if(connectTimer->isActive()){
+         connectTimer->stop();
+    }
 
     msg_t msg1, msg2, msg3, msg4;
 
@@ -290,7 +303,10 @@ void MainWindow::on_pushButton_all_off_clicked()
     //    ::sleep(1);
 #endif
     udpHeartBeatSocket->stopChecking();
-
+    udpHeartBeatSocket->stopYellowsignalcheck();
+    if(connectTimer->isActive()){
+         connectTimer->stop();
+    }
     sendMsg.send(msg1);
     sendMsg.send(msg2);
     sendMsg.send(msg3);
@@ -412,15 +428,10 @@ void MainWindow::on_pushButton_audio_off_clicked()
 
 void MainWindow::onConnectTimeout()
 {
-//    if(videoPlayer->state() == QGst::StatePlaying) {
-//        QLOG_DEBUG() << "Connect ok !";
-//        connectTimer.stop();
-//        return;
-//    }
 
     if (capsMsgarrive) {
         QLOG_DEBUG() << "Connect ok !";
-        connectTimer.stop();
+        connectTimer->stop();
         return;
     }
 
@@ -428,7 +439,7 @@ void MainWindow::onConnectTimeout()
 
         if (start_time.secsTo(QDateTime::currentDateTime()) >= connect_timeout) {
             QMessageBox::warning(this, "连接超时", "连接超时");
-            connectTimer.stop();
+            connectTimer->stop();
         } else {
             QLOG_DEBUG() << "Try connect to ipcam again...";
             do_send_start_msg();
